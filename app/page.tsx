@@ -8,7 +8,7 @@ export default function HomePage() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    // Trigger animation after mount
+
     const timeout = setTimeout(() => setShow(true), 100);
     return () => clearTimeout(timeout);
   }, []);
