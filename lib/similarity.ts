@@ -1,47 +1,79 @@
+export interface VectorResult {
+  queryVector: number[];
+  docVectors: number[][];
+  vocab: string[];
+}
+
 export function tfidfVectorize(
   query: string,
   docs: string[]
-): [number[], number[][]] {
+): VectorResult | undefined {
+  if (!query || !docs) return { queryVector: [], docVectors: [], vocab: [] };
+
   const allDocs = [query, ...docs];
   const terms = new Set<string>();
 
-  // Tokenisasi dan kumpulkan semua kata unik dari semua dokumen
   allDocs.forEach((doc) =>
     doc
       .toLowerCase()
-      .split(/\W+/)
-      .filter(Boolean) // pastikan tidak ada string kosong
+      .split(/[^\w]+/)
+      .filter((word) => word.length > 2)
       .forEach((word) => terms.add(word))
   );
 
   const vocab = Array.from(terms);
+  if (vocab.length === 0) return { queryVector: [], docVectors: [], vocab: [] };
 
-  // Hitung TF (Term Frequency)
   const tf = allDocs.map((doc) => {
-    const words = doc.toLowerCase().split(/\W+/).filter(Boolean);
+    const words = doc
+      .toLowerCase()
+      .split(/[^\w]+/)
+      .filter((word) => word.length > 2);
+
     return vocab.map((term) => {
-      if (words.length === 0) return 0;
       const count = words.filter((w) => w === term).length;
-      return count / words.length;
+      return count / Math.max(words.length, 1);
     });
   });
 
-  // Hitung DF (Document Frequency)
   const df = vocab.map((_, idx) =>
     tf.reduce((count, vec) => (vec[idx] > 0 ? count + 1 : count), 0)
   );
 
-  // Smoothing IDF untuk menghindari pembagian dengan nol
   const idf = df.map((d) => Math.log((allDocs.length + 1) / (d + 1)) + 1);
 
-  // Hitung TF-IDF untuk setiap dokumen
-  const tfidf = tf.map((vec) => vec.map((tfval, i) => tfval * idf[i]));
+  const tfidf = tf.map((vec) => vec.map((tfVal, i) => tfVal * idf[i]));
 
-  return [tfidf[0], tfidf.slice(1)];
+  console.debug("TF-IDF Debug:", {
+    vocab,
+    tf: tf.map((v) => v.map((n) => n.toFixed(2))),
+    df,
+    idf: idf.map((n) => n.toFixed(2)),
+  });
+
+  return {
+    queryVector: tfidf[0],
+    docVectors: tfidf.slice(1),
+    vocab,
+  };
 }
+
 export function cosineSimilarity(a: number[], b: number[]): number {
-  const dot = a.reduce((sum, val, i) => sum + val * b[i], 0);
-  const magA = Math.sqrt(a.reduce((sum, val) => sum + val * val, 0));
-  const magB = Math.sqrt(b.reduce((sum, val) => sum + val * val, 0));
-  return magA && magB ? dot / (magA * magB) : 0;
+  if (a.length !== b.length || a.length === 0) return 0;
+
+  let dot = 0;
+  let magA = 0;
+  let magB = 0;
+
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i] * b[i];
+    magA += a[i] * a[i];
+    magB += b[i] * b[i];
+  }
+
+  magA = Math.sqrt(magA);
+  magB = Math.sqrt(magB);
+
+  const similarity = magA && magB ? dot / (magA * magB) : 0;
+  return Math.min(Math.max(similarity, 0), 1);
 }
