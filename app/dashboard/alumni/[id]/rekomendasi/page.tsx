@@ -355,22 +355,7 @@ export default function RekomendasiPage() {
                   </div>
                 </div>
 
-                <div className="mt-6">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-sm font-medium text-gray-700">
-                      Kecocokan
-                    </span>
-                    <span className="text-sm font-bold text-indigo-600">
-                      {(p.similarity * 100).toFixed(1)}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                    <div
-                      className="bg-gradient-to-r from-blue-400 to-indigo-600 h-2.5 rounded-full"
-                      style={{ width: `${(p.similarity * 100).toFixed(1)}%` }}
-                    />
-                  </div>
-                </div>
+                
               </div>
             </motion.div>
           ))}
