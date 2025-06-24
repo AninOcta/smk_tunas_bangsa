@@ -1,3 +1,4 @@
+
 export interface VectorResult {
   queryVector: number[];
   docVectors: number[][];

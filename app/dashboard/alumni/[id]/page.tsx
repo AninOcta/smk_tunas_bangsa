@@ -158,6 +158,16 @@ export default function AlumniDashboardPage() {
               </li>
               <li>
                 <button
+                  onClick={() =>
+                    handleNavigate(`/dashboard/alumni/${user?.uid}/Kontak`)
+                  }
+                  className="text-white hover:text-gray-400"
+                >
+                  Kontak
+                </button>
+              </li>
+              <li>
+                <button
                   onClick={handleLogout}
                   className="text-white hover:text-gray-400"
                 >
