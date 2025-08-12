@@ -7,6 +7,7 @@ import { doc, setDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
+  const [nisn, setNisn] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -23,6 +24,7 @@ export default function RegisterPage() {
     }
 
     try {
+      // Buat akun Firebase Auth
       const userCred = await createUserWithEmailAndPassword(
         auth,
         email,
@@ -30,7 +32,9 @@ export default function RegisterPage() {
       );
       const user = userCred.user;
 
+      // Simpan data ke Firestore
       await setDoc(doc(db, "users", user.uid), {
+        nisn,
         email: user.email,
         role: "alumni",
         createdAt: new Date(),
@@ -50,6 +54,14 @@ export default function RegisterPage() {
           Buat Akun Baru
         </h2>
         <form onSubmit={handleRegister} className="space-y-6">
+          <input
+            type="text"
+            placeholder="NISN"
+            className="w-full px-5 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
+            value={nisn}
+            onChange={(e) => setNisn(e.target.value)}
+            required
+          />
           <input
             type="email"
             placeholder="Email"
