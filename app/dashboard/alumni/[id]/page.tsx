@@ -3,15 +3,8 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useParams, useRouter } from "next/navigation";
 import { auth, db } from "@/lib/firebase";
-
 import { useEffect, useState } from "react";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-
-interface AlumniDashboardPageProps {
-  params: {
-    id: string;
-  };
-}
 
 export default function AlumniDashboardPage() {
   const { id } = useParams();
@@ -21,7 +14,10 @@ export default function AlumniDashboardPage() {
   const [alumniData, setAlumniData] = useState<any>(null);
   const [editMode, setEditMode] = useState(false);
   const [image, setImage] = useState<File | null>(null);
+
+  // formData sekarang punya field nisn
   const [formData, setFormData] = useState({
+    nisn: "",
     name: "",
     jurusan: "",
     tahunLulus: "",
@@ -43,20 +39,10 @@ export default function AlumniDashboardPage() {
         if (!docSnap.exists()) return;
 
         const data = docSnap.data();
-        if (
-          !data.name ||
-          !data.jurusan ||
-          !data.tahunLulus ||
-          !data.pekerjaan ||
-          !data.alamat ||
-          !data.skills
-        ) {
-          // You can alert or warn user here instead of redirecting
-          console.warn("Lengkapi semua data profil terlebih dahulu.");
-        }
 
         setAlumniData(data);
         setFormData({
+          nisn: data.nisn || "",
           name: data.name || "",
           jurusan: data.jurusan || "",
           tahunLulus: data.tahunLulus || "",
@@ -83,13 +69,10 @@ export default function AlumniDashboardPage() {
 
   const handleUpdate = async () => {
     if (!user) return;
-
     try {
       const docRef = doc(db, "users", user.uid);
-
-      const updatedData = { ...formData };
-      await updateDoc(docRef, updatedData);
-      setAlumniData(updatedData);
+      await updateDoc(docRef, formData);
+      setAlumniData(formData);
       setEditMode(false);
     } catch (error) {
       console.error("Gagal update:", error);
@@ -109,7 +92,8 @@ export default function AlumniDashboardPage() {
   }
 
   return (
-    <div className="h-auto w-full  text-black ">
+    <div className="h-auto w-full text-black">
+      {/* Header Sekolah */}
       <div className="w-full h-auto p-5 bg-white justify-start flex  items-center ">
         <div className="col-span-2 text-start">
           <img
@@ -132,65 +116,61 @@ export default function AlumniDashboardPage() {
         </div>
       </div>
 
-      <div className="w-full h-auto p-8 bg-gradient-to-tr from-purple-600 via-indigo-600 to-blue-600 justify-end flex  items-end">
-        <nav className="">
-          <div className="max-w-7xl mx-auto px-4  flex justify-between items-center">
-            <ul className="flex space-x-4 text-white">
-              <li>
-                <button
-                  onClick={() =>
-                    handleNavigate(`/dashboard/alumni/${user?.uid}`)
-                  }
-                  className="text-white hover:text-gray-400"
-                >
-                  Dashboard
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() =>
-                    handleNavigate(`/dashboard/alumni/${user?.uid}/rekomendasi`)
-                  }
-                  className="text-white hover:text-gray-400"
-                >
-                  Rekomendasi
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() =>
-                    handleNavigate(`/dashboard/alumni/${user?.uid}/Kontak`)
-                  }
-                  className="text-white hover:text-gray-400"
-                >
-                  Kontak
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={handleLogout}
-                  className="text-white hover:text-gray-400"
-                >
-                  Logout
-                </button>
-              </li>
-            </ul>
-          </div>
+      {/* Navbar */}
+      <div className="w-full h-auto p-8 bg-gradient-to-tr from-purple-600 via-indigo-600 to-blue-600">
+        <nav>
+          <ul className="flex space-x-4 text-white">
+            <li>
+              <button
+                onClick={() => handleNavigate(`/dashboard/alumni/${user?.uid}`)}
+                className="hover:text-gray-400"
+              >
+                Dashboard
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() =>
+                  handleNavigate(`/dashboard/alumni/${user?.uid}/rekomendasi`)
+                }
+                className="hover:text-gray-400"
+              >
+                Rekomendasi
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() =>
+                  handleNavigate(`/dashboard/alumni/${user?.uid}/Kontak`)
+                }
+                className="hover:text-gray-400"
+              >
+                Kontak
+              </button>
+            </li>
+            <li>
+              <button onClick={handleLogout} className="hover:text-gray-400">
+                Logout
+              </button>
+            </li>
+          </ul>
         </nav>
       </div>
 
-      <main className="bg-white p-8  w-full h-auto mx-auto">
+      {/* Main Content */}
+      <main className="bg-white p-8">
         <h1 className="text-4xl font-bold">Dashboard Alumni</h1>
         <h2 className="text-2xl font-semibold mb-4">
           Selamat datang, {alumniData.name}
         </h2>
-        <h1 className="mb-6 text-black/80 text-xl text-center py-8 font-bold">
-          Data profil kamu:
-        </h1>
 
         {!editMode ? (
           <>
-            <section className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white bg-opacity-30  p-16">
+            <section className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white bg-opacity-30 p-16">
+              <div>
+                <h3 className="font-bold">NISN:</h3>
+                <p>{alumniData.nisn}</p>
+              </div>
               <div>
                 <h3 className="font-bold">Email:</h3>
                 <p>{user?.email}</p>
@@ -224,46 +204,38 @@ export default function AlumniDashboardPage() {
             <div className="mt-6 text-center">
               <button
                 onClick={() => setEditMode(true)}
-                className="bg-yellow-400 hover:bg-yellow-500 transition px-6 py-2 rounded-lg font-semibold"
+                className="bg-yellow-400 hover:bg-yellow-500 px-6 py-2 rounded-lg font-semibold"
               >
                 Edit Profil
               </button>
             </div>
-            <h1 className="text-center text-red-500 mt-4">
-              * Jika data belum lengkap, masukan data diri terlebih dahulu
-              dengan klik tombol edit profil.{" "}
-            </h1>
           </>
         ) : (
           <>
             <section className="bg-white bg-opacity-30 rounded-xl p-6 space-y-4">
-              {Object.entries(formData).map(
-                ([key, value]) =>
-                  key !== "skills" &&
-                  key !== "imageUrl" && (
-                    <div key={key}>
-                      <label className="block font-semibold capitalize">
-                        {key}
-                      </label>
-                      <input
-                        type="text"
-                        name={key}
-                        value={value}
-                        onChange={handleInputChange}
-                        className="w-full p-2 rounded bg-white/80 mt-1"
-                      />
-                    </div>
-                  )
-              )}
-              <div>
-                <label className="block font-semibold">Keahlian / Skill</label>
-                <textarea
-                  name="skills"
-                  value={formData.skills}
-                  onChange={handleInputChange}
-                  className="w-full p-2 rounded bg-white/80 mt-1"
-                />
-              </div>
+              {Object.entries(formData).map(([key, value]) => (
+                <div key={key}>
+                  <label className="block font-semibold capitalize">
+                    {key}
+                  </label>
+                  {key === "skills" ? (
+                    <textarea
+                      name={key}
+                      value={value}
+                      onChange={handleInputChange}
+                      className="w-full p-2 rounded bg-white/80 mt-1"
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      name={key}
+                      value={value}
+                      onChange={handleInputChange}
+                      className="w-full p-2 rounded bg-white/80 mt-1"
+                    />
+                  )}
+                </div>
+              ))}
             </section>
 
             <div className="flex justify-end mt-6 gap-4">

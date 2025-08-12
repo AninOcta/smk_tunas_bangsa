@@ -26,12 +26,16 @@ interface PerusahaanData {
 export default function DataPerusahaanPage() {
   const router = useRouter();
   const [perusahaan, setPerusahaan] = useState<PerusahaanData[]>([]);
+  const [filteredPerusahaan, setFilteredPerusahaan] = useState<
+    PerusahaanData[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState<
     Partial<PerusahaanData> & { fileUpload?: File }
   >({});
   const [isEditing, setIsEditing] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const fetchPerusahaan = async () => {
     setLoading(true);
@@ -41,12 +45,33 @@ export default function DataPerusahaanPage() {
       ...doc.data(),
     })) as PerusahaanData[];
     setPerusahaan(data);
+    setFilteredPerusahaan(data);
     setLoading(false);
   };
 
   useEffect(() => {
     fetchPerusahaan();
   }, []);
+
+  // Search functionality
+  useEffect(() => {
+    if (searchTerm === "") {
+      setFilteredPerusahaan(perusahaan);
+    } else {
+      const filtered = perusahaan.filter((item) => {
+        return (
+          item.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.bidangIndustri
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          item.kualifikasi.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.lokasi.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.skillDibutuhkan.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      });
+      setFilteredPerusahaan(filtered);
+    }
+  }, [searchTerm, perusahaan]);
 
   const handleSubmit = async () => {
     if (!form.nama) return alert("Nama perusahaan wajib diisi.");
@@ -117,14 +142,23 @@ export default function DataPerusahaanPage() {
           Data Perusahaan
         </h1>
 
-        <div className="mb-4 text-right">
+        <div className="flex justify-between mb-4">
+          <div className="w-1/2">
+            <input
+              type="text"
+              placeholder="Cari perusahaan..."
+              className="w-full p-2 rounded border text-black"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
           <button
             onClick={() => {
               setForm({});
               setIsEditing(false);
               setShowForm(true);
             }}
-            className="bg-gradient-to-br from-green-700 via-green-800 to-green-900 text-white  px-4 py-2 rounded"
+            className="bg-gradient-to-br from-green-700 via-green-800 to-green-900 text-white px-4 py-2 rounded"
           >
             Tambah Perusahaan
           </button>
@@ -146,7 +180,7 @@ export default function DataPerusahaanPage() {
               </tr>
             </thead>
             <tbody>
-              {perusahaan.map((item) => (
+              {filteredPerusahaan.map((item) => (
                 <tr
                   key={item.id}
                   className="hover:bg-gray-400 hover:bg-opacity-10 text-black"
@@ -185,10 +219,12 @@ export default function DataPerusahaanPage() {
                   </td>
                 </tr>
               ))}
-              {perusahaan.length === 0 && (
+              {filteredPerusahaan.length === 0 && (
                 <tr>
                   <td colSpan={7} className="text-center py-4 text-gray-300">
-                    Tidak ada data perusahaan.
+                    {searchTerm
+                      ? "Tidak ditemukan hasil pencarian"
+                      : "Tidak ada data perusahaan."}
                   </td>
                 </tr>
               )}

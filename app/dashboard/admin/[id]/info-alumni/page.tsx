@@ -27,11 +27,12 @@ export default function InfoAlumniPage() {
   const router = useRouter();
 
   const [alumni, setAlumni] = useState<AlumniData[]>([]);
+  const [filteredAlumni, setFilteredAlumni] = useState<AlumniData[]>([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState<Partial<AlumniData>>({});
-
   const [isEditing, setIsEditing] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const fetchAlumni = async () => {
     setLoading(true);
@@ -42,12 +43,35 @@ export default function InfoAlumniPage() {
       ...doc.data(),
     })) as AlumniData[];
     setAlumni(data);
+    setFilteredAlumni(data);
     setLoading(false);
   };
 
   useEffect(() => {
     fetchAlumni();
   }, []);
+
+  // Search functionality
+  useEffect(() => {
+    if (searchTerm === "") {
+      setFilteredAlumni(alumni);
+    } else {
+      const filtered = alumni.filter((item) => {
+        const searchLower = searchTerm.toLowerCase();
+        return (
+          (item.name && item.name.toLowerCase().includes(searchLower)) ||
+          (item.jurusan && item.jurusan.toLowerCase().includes(searchLower)) ||
+          (item.tahunLulus &&
+            item.tahunLulus.toLowerCase().includes(searchLower)) ||
+          (item.pekerjaan &&
+            item.pekerjaan.toLowerCase().includes(searchLower)) ||
+          (item.alamat && item.alamat.toLowerCase().includes(searchLower)) ||
+          (item.skills && item.skills.toLowerCase().includes(searchLower))
+        );
+      });
+      setFilteredAlumni(filtered);
+    }
+  }, [searchTerm, alumni]);
 
   const handleSubmit = async () => {
     if (!form.id) return;
@@ -76,7 +100,6 @@ export default function InfoAlumniPage() {
 
   const handleEdit = (item: AlumniData) => {
     setForm(item);
-
     setIsEditing(true);
     setShowForm(true);
   };
@@ -101,6 +124,17 @@ export default function InfoAlumniPage() {
 
         <h1 className="text-2xl font-bold mb-6 text-center">Info Alumni</h1>
 
+        {/* Search Bar */}
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Cari alumni..."
+            className="w-full p-2 rounded border text-black"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
         {loading ? (
           <p>Memuat data...</p>
         ) : (
@@ -117,7 +151,7 @@ export default function InfoAlumniPage() {
               </tr>
             </thead>
             <tbody>
-              {alumni.map((item) => (
+              {filteredAlumni.map((item) => (
                 <tr
                   key={item.id}
                   className="hover:bg-gray-400 hover:bg-opacity-10"
@@ -144,10 +178,12 @@ export default function InfoAlumniPage() {
                   </td>
                 </tr>
               ))}
-              {alumni.length === 0 && (
+              {filteredAlumni.length === 0 && (
                 <tr>
                   <td colSpan={8} className="text-center py-4 text-gray-300">
-                    Tidak ada data alumni.
+                    {searchTerm
+                      ? "Tidak ditemukan hasil pencarian"
+                      : "Tidak ada data alumni."}
                   </td>
                 </tr>
               )}
