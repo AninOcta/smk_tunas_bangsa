@@ -2,13 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 export default function HomePage() {
   const router = useRouter();
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-
     const timeout = setTimeout(() => setShow(true), 100);
     return () => clearTimeout(timeout);
   }, []);
@@ -20,6 +20,18 @@ export default function HomePage() {
           show ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
         }`}
       >
+        {/* Logo Sekolah */}
+        <div className="mb-6 flex justify-center">
+          <Image
+            src="/assets/images/logoSMK.png"
+            alt="Logo SMK Tunas Bangsa"
+            width={120}
+            height={120}
+            className="drop-shadow-lg "
+            priority
+          />
+        </div>
+
         <h1 className="text-4xl sm:text-6xl font-bold mb-4 drop-shadow-lg animate-pulse">
           Selamat Datang di <br /> SMK Tunas Bangsa
         </h1>
